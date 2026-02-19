@@ -93,77 +93,162 @@ class LLMService {
   async classifyError(errorOutput) {
     console.log('🔍 Classifying errors with AI...');
     
-    const prompt = `You are an expert code analyzer. Analyze this test failure output and extract ALL errors.
+    const prompt = `You are an expert Python/JavaScript test analyzer. Analyze this test failure output and extract EVERY SINGLE error.
 
-For EACH error, classify it into EXACTLY one of these categories:
-- LINTING: Style issues, formatting, unused imports
-- SYNTAX: Missing colons, brackets, parentheses
-- LOGIC: Wrong logic, incorrect conditions
-- TYPE_ERROR: Type mismatches, undefined variables
-- IMPORT: Missing or incorrect imports
-- INDENTATION: Spacing/tab issues
+Your task: Find ALL errors from the test output, not just one. Look for:
+- Failed assertions (assert statements that failed)
+- Syntax errors (SyntaxError, IndentationError)
+- Import errors (ModuleNotFoundError, ImportError)
+- Type errors (TypeError, AttributeError)
+- Logic errors (wrong values, incorrect conditions)
+- Any other error that caused tests to fail
 
-Output format (MUST match exactly):
-<BUG_TYPE> error in <file_path> line <line_number> → Fix: <one-line description>
+For EACH error found, classify it:
+- LINTING: Style issues, unused imports, formatting
+- SYNTAX: Missing colons, brackets, parentheses, invalid syntax
+- LOGIC: Wrong logic, incorrect values, failed assertions
+- TYPE_ERROR: Type mismatches, undefined variables, AttributeError
+- IMPORT: Missing modules, incorrect imports
+- INDENTATION: IndentationError, spacing issues
+
+CRITICAL: You MUST output in this EXACT format (one per line):
+<BUG_TYPE> error in <file_path> line <line_number> → Fix: <description>
+
+Example outputs:
+LOGIC error in test_sample.py line 4 → Fix: Change assertion from 1+1==3 to 1+1==2
+SYNTAX error in app.py line 10 → Fix: Add missing colon after function definition
+IMPORT error in utils.py line 1 → Fix: Install missing 'requests' module
 
 Test output:
 ${errorOutput}
 
-Extract and classify ALL errors now:`;
+Now extract ALL errors (be thorough):`;
 
     const result = await this.model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig: {
-        temperature: 0.3,
+        temperature: 0.2, // Lower temperature for more focused output
+        maxOutputTokens: 1000,
       },
     });
 
     const content = result.response.text() || '';
-    return this.parseErrors(content);
+    console.log('\n🤖 AI Response:');
+    console.log(content.substring(0, 500)); // Show first 500 chars
+    console.log('');
+    
+    return this.parseErrors(content, errorOutput);
   }
 
-  parseErrors(output) {
+  parseErrors(output, originalTestOutput) {
     const errors = [];
     const lines = output.split('\n');
+    const seenErrors = new Set(); // Prevent duplicates
 
     for (const line of lines) {
       // Try structured format from LLM
       let match = line.match(/^(\w+) error in (.+?) line (\d+) → Fix: (.+)$/);
       if (match) {
         const [, bugType, file, lineNum, description] = match;
-        errors.push({
-          bugType: bugType.trim(),
-          file: file.trim(),
-          line: parseInt(lineNum),
-          description: description.trim(),
-        });
+        const key = `${file}:${lineNum}`;
+        if (!seenErrors.has(key)) {
+          errors.push({
+            bugType: bugType.trim(),
+            file: file.trim(),
+            line: parseInt(lineNum),
+            description: description.trim(),
+          });
+          seenErrors.add(key);
+        }
         continue;
       }
 
-      // Fall back to pytest format: FAILED tests/test_app.py::test_name - AssertionError
-      match = line.match(/FAILED (.+?)::(.+?) - (\w+)/);
+      // Alternative format with "in" keyword
+      match = line.match(/(\w+):\s*(.+?)\s+in\s+(.+?)\s+line\s+(\d+)/i);
       if (match) {
-        const [, file, testName, errorType] = match;
-        const bugType = errorType.includes('Syntax') ? 'SYNTAX' : 
-                       errorType.includes('Import') ? 'IMPORT' :
-                       errorType.includes('Type') ? 'TYPE_ERROR' : 'LOGIC';
-        errors.push({
-          bugType,
-          file: file.replace(/\.py$/, '.py').replace('::', '/'),
-          line: 1,
-          description: `Test ${testName} failed with ${errorType}`,
-        });
+        const [, bugType, description, file, lineNum] = match;
+        const key = `${file}:${lineNum}`;
+        if (!seenErrors.has(key)) {
+          errors.push({
+            bugType: bugType.trim(),
+            file: file.trim(),
+            line: parseInt(lineNum),
+            description: description.trim(),
+          });
+          seenErrors.add(key);
+        }
         continue;
       }
+    }
 
-      // Jest/Vitest format: ● test_suite › test_name
-      match = line.match(/● (.+?) › (.+)/);
-      if (match) {
-        errors.push({
-          bugType: 'LOGIC',
-          file: 'test file',
-          line: 1,
-          description: match[2],
+    // If no structured errors found, try parsing pytest output directly
+    if (errors.length === 0 && originalTestOutput) {
+      console.log('⚠️  No structured errors from AI, parsing pytest output directly...');
+      
+      // Python pytest: "FAILED test_file.py::test_name - AssertionError: ..."
+      const failedTests = originalTestOutput.match(/FAILED\s+(.+?)::(.+?)\s+-\s+(.+)/g);
+      if (failedTests) {
+        failedTests.forEach(match => {
+          const parts = match.match(/FAILED\s+(.+?)::(.+?)\s+-\s+(.+)/);
+          if (parts) {
+            const file = parts[1].trim();
+            const testName = parts[2].trim();
+            const errorMsg = parts[3].trim();
+            
+            // Try to find line number in surrounding output
+            const fileSection = originalTestOutput.indexOf(match);
+            const lineMatch = originalTestOutput.slice(Math.max(0, fileSection - 200), fileSection + 200)
+              .match(/line\s+(\d+)/i);
+            
+            const bugType = errorMsg.includes('assert') ? 'LOGIC' :
+                           errorMsg.includes('Syntax') ? 'SYNTAX' :
+                           errorMsg.includes('Import') || errorMsg.includes('ModuleNotFound') ? 'IMPORT' :
+                           errorMsg.includes('Indentation') ? 'INDENTATION' :
+                           errorMsg.includes('Type') || errorMsg.includes('Attribute') ? 'TYPE_ERROR' : 'LOGIC';
+            
+            errors.push({
+              bugType,
+              file,
+              line: lineMatch ? parseInt(lineMatch[1]) : 1,
+              description: `${testName}: ${errorMsg.substring(0, 100)}`,
+            });
+          }
+        });
+      }
+
+      // Python error with file and line: "  File "test.py", line 4"
+      const pythonErrors = originalTestOutput.match(/File\s+"(.+?)",\s+line\s+(\d+)/g);
+      if (pythonErrors && errors.length === 0) {
+        pythonErrors.forEach(match => {
+          const parts = match.match(/File\s+"(.+?)",\s+line\s+(\d+)/);
+          if (parts) {
+            const file = parts[1].trim();
+            const line = parseInt(parts[2]);
+            
+            // Look for error type nearby
+            const errorIndex = originalTestOutput.indexOf(match);
+            const context = originalTestOutput.slice(errorIndex, errorIndex + 300);
+            const errorType = context.match(/(SyntaxError|IndentationError|ImportError|AssertionError|TypeError|AttributeError|ModuleNotFoundError):\s*(.+)/);
+            
+            if (errorType) {
+              const bugType = errorType[1].includes('Syntax') ? 'SYNTAX' :
+                             errorType[1].includes('Indentation') ? 'INDENTATION' :
+                             errorType[1].includes('Import') || errorType[1].includes('ModuleNotFound') ? 'IMPORT' :
+                             errorType[1].includes('Type') || errorType[1].includes('Attribute') ? 'TYPE_ERROR' :
+                             errorType[1].includes('Assertion') ? 'LOGIC' : 'LOGIC';
+              
+              const key = `${file}:${line}`;
+              if (!seenErrors.has(key)) {
+                errors.push({
+                  bugType,
+                  file,
+                  line,
+                  description: errorType[2]?.substring(0, 100) || errorType[1],
+                });
+                seenErrors.add(key);
+              }
+            }
+          }
         });
       }
     }
@@ -443,9 +528,12 @@ async function runAgent() {
     // Install dependencies before testing
     await testRunner.installDependencies();
 
-    // Step 4: Healing loop (max 2 iterations)
-    for (let iteration = 1; iteration <= MAX_RETRIES; iteration++) {
-      console.log(`\n🔄 CI Iteration ${iteration}/${MAX_RETRIES}`);
+    // Step 4: Healing loop (max 2-3 iterations with smart stopping)
+    let previousErrorCount = Infinity;
+    let maxIterations = MAX_RETRIES;
+    
+    for (let iteration = 1; iteration <= maxIterations; iteration++) {
+      console.log(`\n🔄 CI Iteration ${iteration}/${Math.min(iteration, MAX_RETRIES)}`);
 
       const testResult = await testRunner.runTests();
       
@@ -463,9 +551,9 @@ async function runAgent() {
       }
 
       console.log('❌ Tests failed, analyzing errors...');
-      console.log('\n📋 Test Output (last 500 chars):');
-      const output = (testResult.stdout + '\n' + testResult.stderr).slice(-500);
-      console.log(output);
+      console.log('\n📋 Full Test Output:');
+      console.log(testResult.stdout);
+      if (testResult.stderr) console.log(testResult.stderr);
       console.log('');
       
       // Classify errors
@@ -476,7 +564,7 @@ async function runAgent() {
       if (errors.length === 0) {
         console.log('⚠️  Could not classify errors from test output');
         
-        if (iteration === MAX_RETRIES) {
+        if (iteration >= MAX_RETRIES) {
           console.log('\n🛑 Reached max iterations. Common issues:');
           console.log('   - Missing dependencies (install manually)');
           console.log('   - Configuration problems (check test setup)');
@@ -488,6 +576,17 @@ async function runAgent() {
         console.log('⏭️  Retrying with next iteration...');
         continue;
       }
+
+      // Check if we're making progress
+      if (errors.length < previousErrorCount) {
+        console.log(`✨ Progress! Error count: ${previousErrorCount} → ${errors.length}`);
+        // If we're making progress and at iteration limit, allow one bonus iteration
+        if (iteration === maxIterations && errors.length > 0) {
+          maxIterations++;
+          console.log(`   Allowing bonus iteration to complete the fixes...`);
+        }
+      }
+      previousErrorCount = errors.length;
 
       result.totalFailures += errors.length;
       console.log(`📊 Found ${errors.length} error(s) to fix in this iteration`);

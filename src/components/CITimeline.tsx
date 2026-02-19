@@ -3,8 +3,9 @@ import { Activity, CheckCircle2, XCircle } from "lucide-react";
 import type { AgentResult } from "@/lib/types";
 
 const CITimeline = ({ result }: { result: AgentResult }) => {
-  const maxRetries = 2; // Updated to match orchestrator MAX_RETRIES
+  const maxRetries = 2; // Base max, but can extend if making progress
   const used = result.ciTimeline.length;
+  const unusedCount = used > maxRetries ? 0 : maxRetries - used; // Handle bonus iterations
 
   return (
     <motion.div
@@ -19,7 +20,7 @@ const CITimeline = ({ result }: { result: AgentResult }) => {
           CI/CD Timeline
         </h2>
         <span className="text-xs font-mono text-muted-foreground bg-muted px-2 py-1 rounded">
-          {used}/{maxRetries} retries
+          {used}/{Math.max(used, maxRetries)} {used > maxRetries ? '(bonus)' : 'retries'}
         </span>
       </div>
 
@@ -69,7 +70,7 @@ const CITimeline = ({ result }: { result: AgentResult }) => {
         </div>
 
         {/* Unused retries */}
-        {Array.from({ length: maxRetries - used }).map((_, i) => (
+        {Array.from({ length: unusedCount }).map((_, i) => (
           <div key={`empty-${i}`} className="flex items-start gap-4 relative mt-4 opacity-20">
             <div className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 border-border bg-muted">
               <span className="text-xs text-muted-foreground">{used + i + 1}</span>

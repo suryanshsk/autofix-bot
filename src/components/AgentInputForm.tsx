@@ -27,34 +27,34 @@ const AgentInputForm = ({ onSubmit, loading }: Props) => {
       onSubmit={handleSubmit}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-glow rounded-lg p-6 space-y-5"
+      className="bg-white rounded-2xl shadow-xl shadow-primary/10 border-2 border-secondary p-8 space-y-6"
     >
       <div className="flex items-center gap-3 mb-2">
-        <div className="p-2 rounded-md bg-primary/10 border border-primary/20">
-          <Terminal className="w-5 h-5 text-primary" />
+        <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
+          <Terminal className="w-6 h-6 text-primary" />
         </div>
-        <h2 className="text-lg font-semibold text-foreground">Agent Configuration</h2>
+        <h2 className="text-xl font-bold text-foreground">Agent Configuration</h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-1.5">GitHub Repository URL</label>
+          <label className="block text-sm font-semibold text-foreground mb-2">GitHub Repository URL</label>
           <input
             type="url"
             value={repoUrl}
             onChange={(e) => setRepoUrl(e.target.value)}
             placeholder="https://github.com/YOUR-USERNAME/your-repo"
-            className="w-full px-4 py-2.5 rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+            className="w-full px-4 py-3 rounded-xl bg-muted/50 border-2 border-border text-foreground placeholder:text-muted-foreground/50 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
             required
           />
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            className="mt-2 flex items-start gap-2 text-xs text-blue-500 bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-2"
+            className="mt-3 flex items-start gap-2 text-sm text-primary bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl px-4 py-3"
           >
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-medium">✨ Automatic Forking:</span> Don't have write access? No problem! 
+              <span className="font-semibold">Automatic Forking:</span> Don't have write access? No problem! 
               We'll automatically fork the repo and create a PR back to the original.
             </div>
           </motion.div>
@@ -62,24 +62,24 @@ const AgentInputForm = ({ onSubmit, loading }: Props) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Team Name</label>
+            <label className="block text-sm font-semibold text-foreground mb-2">Team Name</label>
             <input
               type="text"
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               placeholder="Team Alpha"
-              className="w-full px-4 py-2.5 rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-muted/50 border-2 border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-1.5">Leader Name</label>
+            <label className="block text-sm font-semibold text-foreground mb-2">Leader Name</label>
             <input
               type="text"
               value={leaderName}
               onChange={(e) => setLeaderName(e.target.value)}
               placeholder="John Doe"
-              className="w-full px-4 py-2.5 rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-muted/50 border-2 border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
               required
             />
           </div>
@@ -89,11 +89,11 @@ const AgentInputForm = ({ onSubmit, loading }: Props) => {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            className="flex items-center gap-2 text-xs font-mono text-primary bg-primary/5 border border-primary/10 rounded-md px-3 py-2"
+            className="flex items-center gap-2 text-sm font-mono text-primary bg-gradient-to-r from-secondary/50 to-accent/30 border border-primary/20 rounded-xl px-4 py-3"
           >
-            <GitBranch className="w-3.5 h-3.5" />
-            <span className="text-muted-foreground">Branch:</span>
-            <span>{branchPreview}</span>
+            <GitBranch className="w-4 h-4" />
+            <span className="text-foreground font-semibold">Branch:</span>
+            <span className="font-semibold">{branchPreview}</span>
           </motion.div>
         )}
       </div>
@@ -101,16 +101,16 @@ const AgentInputForm = ({ onSubmit, loading }: Props) => {
       <button
         type="submit"
         disabled={loading || !repoUrl || !teamName || !leaderName}
-        className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all glow-primary"
+        className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-bold text-base hover:shadow-xl hover:shadow-primary/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-[0.98]"
       >
         {loading ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin" />
             Agent Running...
           </>
         ) : (
           <>
-            <Zap className="w-4 h-4" />
+            <Zap className="w-5 h-5" />
             Run Healing Agent
           </>
         )}

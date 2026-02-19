@@ -110,34 +110,35 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Subtle grid background */}
-      <div className="fixed inset-0 opacity-[0.03]" style={{
-        backgroundImage: "linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)",
-        backgroundSize: "60px 60px",
-      }} />
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-accent/20 relative overflow-hidden">
+      {/* Subtle decorative circles */}
+      <div className="fixed top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+      <div className="fixed bottom-0 left-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 sm:py-12">
-        {/* Header */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-12 sm:py-16">
+        {/* Hero Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-10"
+          className="text-center mb-12 space-y-6"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-mono mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-dot" />
-            AUTONOMOUS AGENT v1.0
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm font-semibold text-primary">AUTONOMOUS AGENT v1.0</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-3">
-            CI/CD <span className="text-gradient">Healing Agent</span>
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
+            <span className="text-foreground">CI/CD </span>
+            <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+              Healing Agent
+            </span>
           </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto text-sm sm:text-base">
-            AI-powered autonomous agent that detects, classifies, and fixes test failures — then pushes clean code to GitHub.
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            AI-powered autonomous agent that detects, classifies, and fixes test failures — then pushes clean code to GitHub automatically.
           </p>
         </motion.div>
 
         {/* Input Form */}
-        <div className="max-w-2xl mx-auto mb-10">
+        <div className="max-w-2xl mx-auto mb-12">
           <AgentInputForm onSubmit={handleSubmit} loading={loading} />
         </div>
 
@@ -148,7 +149,7 @@ const Index = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="space-y-6"
+              className="space-y-8"
             >
               {/* GitHub Link */}
               {githubUrl && (
@@ -161,7 +162,7 @@ const Index = () => {
                     href={githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-sm text-primary hover:underline card-glow px-5 py-3 rounded-lg font-medium"
+                    className="flex items-center gap-2 text-sm text-white bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/30 transition-all px-6 py-3 rounded-full font-semibold"
                   >
                     <ExternalLink className="w-4 h-4" />
                     View Live Logs on GitHub Actions
@@ -177,13 +178,13 @@ const Index = () => {
               {/* Pulsing AI Icon */}
               <div className="flex flex-col items-center gap-4 py-8">
                 <div className="relative">
-                  <Sparkles className="w-12 h-12 text-primary animate-pulse" />
-                  <div className="absolute inset-0 rounded-full glow-primary animate-ping opacity-30" />
+                  <Sparkles className="w-14 h-14 text-primary animate-pulse drop-shadow-lg" />
+                  <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
                 </div>
-                <div className="text-sm text-muted-foreground font-mono text-center max-w-md">
+                <div className="text-base text-foreground font-medium text-center max-w-md">
                   <motion.span
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    animate={{ opacity: [1, 0.5, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
                   >
                     {statusMessage}
                   </motion.span>
@@ -199,7 +200,7 @@ const Index = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="space-y-6"
+              className="space-y-8"
             >
               {/* Branch Link Card (prominent) */}
               <BranchLinkCard 
@@ -225,14 +226,14 @@ const Index = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    <h2 className="text-xl font-bold text-foreground">AI-Generated Fixes</h2>
-                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Sparkles className="w-6 h-6 text-primary" />
+                    <h2 className="text-2xl font-bold text-foreground">AI-Generated Fixes</h2>
+                    <span className="px-3 py-1 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 text-primary text-sm font-semibold">
                       {result.fixes.length} fixes
                     </span>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {result.fixes.map((fix, index) => (
                       <CodeDiffViewer
                         key={index}

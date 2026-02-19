@@ -6,7 +6,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
-const glob = require('glob');
+const { glob } = require('glob');
 
 const execAsync = promisify(exec);
 

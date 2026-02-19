@@ -1,5 +1,9 @@
 // API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+// In production, use relative paths to hit the same domain's /api routes
+// In development, point to local backend server
+const API_BASE_URL = import.meta.env.PROD 
+  ? '/api' 
+  : (import.meta.env.VITE_API_URL || 'http://localhost:3001/api');
 
 export interface AgentRequest {
   repoUrl: string;

@@ -47,7 +47,7 @@ jobs:
       - name: Run Healing Agent
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
           REPO_URL: ${{ inputs.repo_url }}
           TEAM_NAME: ${{ inputs.team_name }}
           LEADER_NAME: ${{ inputs.leader_name }}

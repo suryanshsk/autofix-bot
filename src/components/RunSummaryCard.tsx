@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { GitBranch, Bug, Wrench, Clock, CheckCircle2, XCircle, Globe } from "lucide-react";
+import { GitBranch, Bug, Wrench, Clock, CheckCircle2, XCircle, Globe, GitPullRequest } from "lucide-react";
 import type { AgentResult } from "@/lib/types";
 
 const RunSummaryCard = ({ result }: { result: AgentResult }) => {
@@ -8,6 +8,7 @@ const RunSummaryCard = ({ result }: { result: AgentResult }) => {
   const items = [
     { icon: Globe, label: "Repository", value: result.repoUrl.replace("https://github.com/", ""), mono: true },
     { icon: GitBranch, label: "Branch", value: result.branchName, mono: true },
+    ...(result.pullRequestUrl ? [{ icon: GitPullRequest, label: "Pull Request", value: result.pullRequestUrl, link: true }] : []),
     { icon: Bug, label: "Failures Found", value: result.totalFailures },
     { icon: Wrench, label: "Fixes Applied", value: result.totalFixes },
     { icon: Clock, label: "Time Taken", value: result.totalTimeTaken },
@@ -35,9 +36,20 @@ const RunSummaryCard = ({ result }: { result: AgentResult }) => {
               <item.icon className="w-4 h-4" />
               {item.label}
             </span>
-            <span className={`text-foreground ${item.mono ? "font-mono text-xs" : "font-semibold"}`}>
-              {item.value}
-            </span>
+            {item.link ? (
+              <a 
+                href={item.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 font-mono text-xs underline underline-offset-2 transition-colors"
+              >
+                #{item.value.split('/').pop()}
+              </a>
+            ) : (
+              <span className={`text-foreground ${item.mono ? "font-mono text-xs" : "font-semibold"}`}>
+                {item.value}
+              </span>
+            )}
           </div>
         ))}
       </div>

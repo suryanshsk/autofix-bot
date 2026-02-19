@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "@octokit/rest": "^21.0.0",
     "fs-extra": "^11.2.0",
     "glob": "^10.3.10",
     "simple-git": "^3.22.0"

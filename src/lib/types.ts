@@ -21,6 +21,7 @@ export interface AgentResult {
   teamName: string;
   leaderName: string;
   branchName: string;
+  pullRequestUrl: string | null;
   totalFailures: number;
   totalFixes: number;
   finalCIStatus: "PASSED" | "FAILED";
@@ -41,6 +42,7 @@ export const MOCK_RESULT: AgentResult = {
   teamName: "TEAM_ALPHA",
   leaderName: "JOHN_DOE",
   branchName: "TEAM_ALPHA_JOHN_DOE_AI_Fix",
+  pullRequestUrl: "https://github.com/team-alpha/ml-pipeline/pull/42",
   totalFailures: 7,
   totalFixes: 7,
   finalCIStatus: "PASSED",

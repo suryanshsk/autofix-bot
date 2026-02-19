@@ -3,7 +3,7 @@ import { Activity, CheckCircle2, XCircle } from "lucide-react";
 import type { AgentResult } from "@/lib/types";
 
 const CITimeline = ({ result }: { result: AgentResult }) => {
-  const maxRetries = 5;
+  const maxRetries = 2; // Updated to match orchestrator MAX_RETRIES
   const used = result.ciTimeline.length;
 
   return (

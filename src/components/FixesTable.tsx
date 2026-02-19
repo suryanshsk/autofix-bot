@@ -47,7 +47,10 @@ const FixesTable = ({ result }: { result: AgentResult }) => (
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 + i * 0.05 }}
-              className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+              className={`border-b border-border/50 hover:bg-muted/30 transition-colors ${
+                fix.status === 'FAILED' ? 'opacity-60' : ''
+              }`}
+              title={fix.status === 'FAILED' ? `Failed: ${fix.description}` : ''}
             >
               <td className="py-3 font-mono text-xs text-foreground">{fix.file}</td>
               <td className="py-3">
@@ -56,7 +59,14 @@ const FixesTable = ({ result }: { result: AgentResult }) => (
                 </span>
               </td>
               <td className="py-3 font-mono text-xs text-muted-foreground">{fix.line}</td>
-              <td className="py-3 font-mono text-xs text-muted-foreground hidden md:table-cell truncate max-w-[280px]">{fix.commitMessage}</td>
+              <td className="py-3 font-mono text-xs text-muted-foreground hidden md:table-cell truncate max-w-[280px]">
+                {fix.commitMessage}
+                {fix.status === 'FAILED' && fix.description && (
+                  <div className="text-destructive text-[10px] mt-0.5">
+                    ⚠️ {fix.description}
+                  </div>
+                )}
+              </td>
               <td className="py-3 text-center">{statusIcon[fix.status]}</td>
             </motion.tr>
           ))}

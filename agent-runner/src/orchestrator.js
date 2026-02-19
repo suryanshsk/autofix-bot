@@ -535,52 +535,79 @@ async function runAgent() {
         
         if (!fs.existsSync(filePath)) {
           console.log(`⚠️  File not found: ${error.file}, skipping...`);
+          
+          // Track failed fix
+          result.fixes.push({
+            file: error.file,
+            bugType: error.bugType,
+            line: error.line,
+            commitMessage: `[AI-AGENT] Could not fix ${error.bugType} in ${error.file} - file not found`,
+            status: 'FAILED',
+            errorMessage: error.description || `${error.bugType} error detected`,
+            description: 'File not found in repository',
+          });
+          
           continue;
         }
 
-        const originalContent = fs.readFileSync(filePath, 'utf-8');
-        const fixedContent = await llmService.generateFix(
-          error.file,
-          error.line,
-          error.bugType,
-          error.description,
-          originalContent
-        );
+        try {
+          const originalContent = fs.readFileSync(filePath, 'utf-8');
+          const fixedContent = await llmService.generateFix(
+            error.file,
+            error.line,
+            error.bugType,
+            error.description,
+            originalContent
+          );
 
-        // Extract code snippets (3 lines before and after the error line)
-        const getCodeSnippet = (content, lineNum, contextLines = 3) => {
-          const lines = content.split('\n');
-          const start = Math.max(0, lineNum - contextLines - 1);
-          const end = Math.min(lines.length, lineNum + contextLines);
-          return lines.slice(start, end).join('\n');
-        };
+          // Extract code snippets (3 lines before and after the error line)
+          const getCodeSnippet = (content, lineNum, contextLines = 3) => {
+            const lines = content.split('\n');
+            const start = Math.max(0, lineNum - contextLines - 1);
+            const end = Math.min(lines.length, lineNum + contextLines);
+            return lines.slice(start, end).join('\n');
+          };
 
-        const beforeCode = getCodeSnippet(originalContent, error.line);
-        const afterCode = getCodeSnippet(fixedContent, error.line);
+          const beforeCode = getCodeSnippet(originalContent, error.line);
+          const afterCode = getCodeSnippet(fixedContent, error.line);
 
-        // Write fix
-        fs.writeFileSync(filePath, fixedContent);
+          // Write fix
+          fs.writeFileSync(filePath, fixedContent);
 
-        // Commit
-        const commitMessage = `[AI-AGENT] Fix ${error.bugType} in ${error.file} line ${error.line}`;
-        await repoGit.add(error.file);
-        await repoGit.commit(commitMessage);
+          // Commit
+          const commitMessage = `[AI-AGENT] Fix ${error.bugType} in ${error.file} line ${error.line}`;
+          await repoGit.add(error.file);
+          await repoGit.commit(commitMessage);
 
-        result.totalCommits++;
-        fixesAppliedThisIteration++;
-        result.fixes.push({
-          file: error.file,
-          bugType: error.bugType,
-          line: error.line,
-          commitMessage,
-          status: 'FIXED',
-          errorMessage: error.description || `${error.bugType} error detected`,
-          beforeCode,
-          afterCode,
-          description: error.description,
-        });
+          result.totalCommits++;
+          fixesAppliedThisIteration++;
+          result.fixes.push({
+            file: error.file,
+            bugType: error.bugType,
+            line: error.line,
+            commitMessage,
+            status: 'FIXED',
+            errorMessage: error.description || `${error.bugType} error detected`,
+            beforeCode,
+            afterCode,
+            description: error.description,
+          });
 
-        console.log(`✅ Fixed and committed`);
+          console.log(`✅ Fixed and committed`);
+        } catch (fixError) {
+          console.log(`❌ Failed to fix ${error.file}:${error.line} - ${fixError.message}`);
+          
+          // Track failed fix
+          result.fixes.push({
+            file: error.file,
+            bugType: error.bugType,
+            line: error.line,
+            commitMessage: `[AI-AGENT] Failed to fix ${error.bugType} in ${error.file}`,
+            status: 'FAILED',
+            errorMessage: error.description || `${error.bugType} error detected`,
+            description: `Fix failed: ${fixError.message}`,
+          });
+        }
       }
       
       console.log(`\n✅ Applied ${fixesAppliedThisIteration} fix(es) in iteration ${iteration}`);
@@ -626,7 +653,7 @@ async function runAgent() {
       result.score.commitPenalty = (result.totalCommits - 20) * 2;
     }
     result.score.final = Math.min(100, result.score.base + result.score.timeBonus - result.score.commitPenalty);
-    result.totalFixes = result.fixes.length;
+    result.totalFixes = result.fixes.filter(f => f.status === 'FIXED').length;
 
     // Step 6: Create Pull Request
     console.log('\n📝 Creating Pull Request...');

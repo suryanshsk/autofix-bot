@@ -206,6 +206,8 @@ const Index = () => {
                 branchName={result.branchName}
                 repoUrl={result.repoUrl}
                 pullRequestUrl={result.pullRequestUrl}
+                forked={result.forked}
+                originalRepo={result.originalRepo}
               />
 
               {/* Top row: Summary + Score */}

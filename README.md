@@ -155,21 +155,27 @@ See [COMPLETE_SETUP.md](COMPLETE_SETUP.md) for detailed step-by-step instruction
 
 ### ⚠️ **IMPORTANT: Repository Permissions**
 
-The agent can **only push to repositories you have write access to**:
+✨ **NEW: Automatic Forking Feature!**
 
-✅ **Works on:**
-- Your own repositories
-- Repositories where you're a collaborator (with push access)
-- Forked repositories in your account
+The agent now **automatically handles permission issues** for you:
 
-❌ **Won't work on:**
-- Other people's repositories (unless you're a collaborator)
-- Public repos you don't own
+✅ **What happens:**
+- Agent checks if you have write access to the repository
+- If **NO** write access → Automatically **forks** the repo to your account
+- Makes fixes in your fork → Creates a **PR back to the original** repository
+- If **YES** write access → Works directly on the repo (no fork needed)
 
-**💡 Solution**: If you want to test on someone else's repo:
-1. Click "Fork" on their GitHub repository
-2. Use your forked URL: `https://github.com/YOUR-USERNAME/repo-name`
-3. The agent will push to your fork successfully!
+📝 **This means you can now:**
+- Enter **ANY public GitHub repository URL**
+- No need to manually fork - we handle it automatically!
+- Works on your own repos AND other people's repos seamlessly
+
+**Previous behavior (manual forking):**
+~~1. Click "Fork" on their GitHub repository~~
+~~2. Use your forked URL~~
+~~3. The agent will push to your fork~~
+
+**Now you can just paste any repo URL and we'll handle the rest!** 🎉
 
 ---
 

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { GitBranch, GitPullRequest, ExternalLink, Copy, Check } from "lucide-react";
+import { GitBranch, GitPullRequest, ExternalLink, Copy, Check, GitFork } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -7,9 +7,11 @@ interface Props {
   branchName: string;
   repoUrl: string;
   pullRequestUrl?: string | null;
+  forked?: boolean;
+  originalRepo?: string | null;
 }
 
-const BranchLinkCard = ({ branchName, repoUrl, pullRequestUrl }: Props) => {
+const BranchLinkCard = ({ branchName, repoUrl, pullRequestUrl, forked, originalRepo }: Props) => {
   const [copied, setCopied] = useState(false);
 
   const branchUrl = `${repoUrl}/tree/${branchName}`;
@@ -27,6 +29,18 @@ const BranchLinkCard = ({ branchName, repoUrl, pullRequestUrl }: Props) => {
       animate={{ opacity: 1, scale: 1 }}
       className="card-glow rounded-lg p-6 bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20"
     >
+      {/* Fork Badge */}
+      {forked && originalRepo && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium"
+        >
+          <GitFork className="w-3.5 h-3.5" />
+          <span>Forked from <code className="font-mono">{originalRepo}</code></span>
+        </motion.div>
+      )}
+
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 space-y-4">
           {/* Branch Section */}
@@ -66,7 +80,9 @@ const BranchLinkCard = ({ branchName, repoUrl, pullRequestUrl }: Props) => {
                 <div className="p-1.5 rounded-md bg-success/10 border border-success/20">
                   <GitPullRequest className="w-3.5 h-3.5 text-success" />
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">Pull Request</span>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Pull Request {forked && "to Original Repo"}
+                </span>
               </div>
               <a
                 href={pullRequestUrl}

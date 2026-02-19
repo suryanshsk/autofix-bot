@@ -50,12 +50,12 @@ const AgentInputForm = ({ onSubmit, loading }: Props) => {
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            className="mt-2 flex items-start gap-2 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2"
+            className="mt-2 flex items-start gap-2 text-xs text-blue-500 bg-blue-500/10 border border-blue-500/20 rounded-md px-3 py-2"
           >
             <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-medium">Important:</span> The agent can only push to repositories you have write access to. 
-              Use your own repos or forks!
+              <span className="font-medium">✨ Automatic Forking:</span> Don't have write access? No problem! 
+              We'll automatically fork the repo and create a PR back to the original.
             </div>
           </motion.div>
         </div>

@@ -1,0 +1,88 @@
+name: CI Healing Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_url:
+        description: 'Target repository URL'
+        required: true
+        type: string
+      team_name:
+        description: 'Team name'
+        required: true
+        type: string
+      leader_name:
+        description: 'Leader name'
+        required: true
+        type: string
+      callback_url:
+        description: 'Webhook URL for results'
+        required: false
+        type: string
+
+jobs:
+  heal-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout agent code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          npm install --prefix ./agent-runner
+          pip install pytest pytest-cov
+      
+      - name: Run Healing Agent
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_URL: ${{ inputs.repo_url }}
+          TEAM_NAME: ${{ inputs.team_name }}
+          LEADER_NAME: ${{ inputs.leader_name }}
+        run: |
+          cd agent-runner
+          node src/orchestrator.js
+      
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-results
+          path: agent-runner/results.json
+          retention-days: 30
+      
+      - name: Send results to webhook
+        if: ${{ inputs.callback_url }}
+        run: |
+          curl -X POST ${{ inputs.callback_url }} \
+            -H "Content-Type: application/json" \
+            -d @agent-runner/results.json
+      
+      - name: Post results as comment (if PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('agent-runner/results.json', 'utf8'));
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🤖 CI Healing Agent Results\n\n` +
+                    `✅ Status: ${results.finalCIStatus}\n` +
+                    `🐛 Failures Fixed: ${results.totalFixes}/${results.totalFailures}\n` +
+                    `⏱️ Time: ${results.totalTimeTaken}\n` +
+                    `🏆 Score: ${results.score.final}`
+            });

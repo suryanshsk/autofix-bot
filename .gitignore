@@ -12,6 +12,13 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (CRITICAL: Never commit tokens!)
+.env
+.env.local
+.env.*.local
+backend-github/.env
+agent-runner/.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

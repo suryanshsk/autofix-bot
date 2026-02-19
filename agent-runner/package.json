@@ -1,0 +1,19 @@
+{
+  "name": "ci-healing-agent-runner",
+  "version": "1.0.0",
+  "description": "Agent that runs on GitHub Actions",
+  "main": "src/orchestrator.js",
+  "scripts": {
+    "start": "node src/orchestrator.js",
+    "dev": "nodemon src/orchestrator.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "fs-extra": "^11.2.0",
+    "glob": "^10.3.10",
+    "simple-git": "^3.22.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  }
+}

@@ -1,4 +1,4 @@
-import { Heart, Github, Sparkles } from 'lucide-react';
+import { Heart, Sparkles } from 'lucide-react';
 
 export function Footer() {
   return (
@@ -35,16 +35,6 @@ export function Footer() {
                   className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
                 >
                   → How It Works
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://github.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1"
-                >
-                  → GitHub <Github className="h-3 w-3" />
                 </a>
               </li>
             </ul>

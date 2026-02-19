@@ -78,7 +78,7 @@ const AgentInputForm = ({ onSubmit, loading }: Props) => {
               type="text"
               value={leaderName}
               onChange={(e) => setLeaderName(e.target.value)}
-              placeholder="John Doe"
+              placeholder="Your Name"
               className="w-full px-4 py-3 rounded-xl bg-muted/50 border-2 border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
               required
             />

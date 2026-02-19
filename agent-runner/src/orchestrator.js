@@ -19,7 +19,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 // Configuration
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 2; // Fix issues in 1-2 iterations max
 const WORKSPACE = path.join(process.cwd(), 'workspace');
 
 // Branch formatter
@@ -204,6 +204,67 @@ class TestRunner {
     this.repoPath = repoPath;
   }
 
+  async installDependencies() {
+    console.log('\n📦 Checking and installing dependencies...');
+    
+    const requirementsPath = path.join(this.repoPath, 'requirements.txt');
+    const packageJsonPath = path.join(this.repoPath, 'package.json');
+    
+    // Install Python dependencies
+    if (fs.existsSync(requirementsPath)) {
+      console.log('🐍 Found requirements.txt, installing Python dependencies...');
+      try {
+        await execAsync('pip install -r requirements.txt', { 
+          cwd: this.repoPath,
+          timeout: 120000 // 2 minute timeout
+        });
+        console.log('✅ Python dependencies installed');
+      } catch (error) {
+        console.log('⚠️  Some Python dependencies may have failed to install');
+        console.log('   Continuing anyway...');
+      }
+    } else {
+      // No requirements.txt, check if we need pytest
+      const pythonTestFiles = await glob('**/{test_*.py,*_test.py}', { 
+        cwd: this.repoPath,
+        ignore: ['**/node_modules/**', '**/venv/**', '**/.venv/**', '**/dist/**'],
+        maxDepth: 3
+      });
+      
+      if (pythonTestFiles.length > 0) {
+        console.log('🐍 Python tests found but no requirements.txt');
+        console.log('   Installing pytest automatically...');
+        try {
+          await execAsync('pip install pytest', { 
+            cwd: this.repoPath,
+            timeout: 60000
+          });
+          console.log('✅ pytest installed');
+        } catch (error) {
+          console.log('⚠️  Failed to install pytest:', error.message);
+        }
+      }
+    }
+    
+    // Install Node.js dependencies
+    if (fs.existsSync(packageJsonPath)) {
+      const nodeModulesPath = path.join(this.repoPath, 'node_modules');
+      if (!fs.existsSync(nodeModulesPath)) {
+        console.log('📦 Found package.json, installing Node.js dependencies...');
+        try {
+          await execAsync('npm install', { 
+            cwd: this.repoPath,
+            timeout: 180000 // 3 minute timeout
+          });
+          console.log('✅ Node.js dependencies installed');
+        } catch (error) {
+          console.log('⚠️  Some Node.js dependencies may have failed to install');
+          console.log('   Continuing anyway...');
+        }
+      }
+    }
+  }
+
   async detectTestFramework() {
     const packageJsonPath = path.join(this.repoPath, 'package.json');
     const requirementsPath = path.join(this.repoPath, 'requirements.txt');
@@ -378,10 +439,11 @@ async function runAgent() {
     // Step 3: Initialize services
     const llmService = new LLMService(GEMINI_API_KEY);
     const testRunner = new TestRunner(WORKSPACE);
-
-    // Step 4: Healing loop
-    let consecutiveNoFixes = 0;
     
+    // Install dependencies before testing
+    await testRunner.installDependencies();
+
+    // Step 4: Healing loop (max 2 iterations)
     for (let iteration = 1; iteration <= MAX_RETRIES; iteration++) {
       console.log(`\n🔄 CI Iteration ${iteration}/${MAX_RETRIES}`);
 
@@ -413,20 +475,19 @@ async function runAgent() {
 
       if (errors.length === 0) {
         console.log('⚠️  Could not classify errors from test output');
-        consecutiveNoFixes++;
         
-        if (consecutiveNoFixes >= 2) {
-          console.log('\n🛑 Stopping: No fixable errors detected in last 2 iterations');
-          console.log('   The test failures may require manual investigation or configuration changes');
+        if (iteration === MAX_RETRIES) {
+          console.log('\n🛑 Reached max iterations. Common issues:');
+          console.log('   - Missing dependencies (install manually)');
+          console.log('   - Configuration problems (check test setup)');
+          console.log('   - Environment issues (Python/Node version mismatch)');
+          result.finalCIStatus = 'FAILED';
           break;
         }
         
         console.log('⏭️  Retrying with next iteration...');
         continue;
       }
-      
-      // Reset consecutive no-fix counter since we found errors
-      consecutiveNoFixes = 0;
 
       result.totalFailures += errors.length;
       console.log(`📊 Found ${errors.length} error(s) to fix in this iteration`);
@@ -436,6 +497,39 @@ async function runAgent() {
       // Fix each error
       for (const error of errors) {
         console.log(`\n🔧 Fixing: ${error.bugType} in ${error.file}:${error.line}`);
+        
+        // Special handling for IMPORT errors - try to install missing package
+        if (error.bugType === 'IMPORT') {
+          console.log('📦 Detected import error, attempting to install missing package...');
+          
+          // Extract package name from description (e.g., "Missing module 'requests'")
+          const packageMatch = error.description.match(/['"](\w+)['"]/);
+          if (packageMatch) {
+            const packageName = packageMatch[1];
+            console.log(`   Installing: ${packageName}`);
+            
+            try {
+              // Try Python pip install
+              if (error.file.endsWith('.py')) {
+                await execAsync(`pip install ${packageName}`, { 
+                  cwd: WORKSPACE,
+                  timeout: 60000
+                });
+                console.log(`✅ Installed ${packageName} via pip`);
+              }
+              // Try Node npm install
+              else if (error.file.endsWith('.js') || error.file.endsWith('.ts')) {
+                await execAsync(`npm install ${packageName}`, { 
+                  cwd: WORKSPACE,
+                  timeout: 60000
+                });
+                console.log(`✅ Installed ${packageName} via npm`);
+              }
+            } catch (installError) {
+              console.log(`⚠️  Could not auto-install ${packageName}`);
+            }
+          }
+        }
         
         const filePath = path.join(WORKSPACE, error.file);
         

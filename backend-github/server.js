@@ -51,7 +51,7 @@ app.post('/api/run-agent', async (req, res) => {
         repo_url: repoUrl,
         team_name: teamName,
         leader_name: leaderName,
-        callback_url: `${req.protocol}://${req.get('host')}/api/webhook`,
+        // callback_url removed - using artifact-based results instead
       },
     });
 

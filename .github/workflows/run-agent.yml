@@ -64,10 +64,14 @@ jobs:
       
       - name: Send results to webhook
         if: ${{ inputs.callback_url }}
+        continue-on-error: true
         run: |
           curl -X POST ${{ inputs.callback_url }} \
             -H "Content-Type: application/json" \
-            -d @agent-runner/results.json
+            -d @agent-runner/results.json \
+            --max-time 30 \
+            --retry 2 \
+            --fail-with-body || echo "⚠️  Warning: Failed to send results to webhook (this is OK)"
       
       - name: Post results as comment (if PR)
         if: github.event_name == 'pull_request'

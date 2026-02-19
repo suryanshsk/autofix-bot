@@ -5,7 +5,7 @@
   "installCommand": "npm install",
   "framework": "vite",
   "functions": {
-    "api/**/*.js": {
+    "api/**/*.cjs": {
       "memory": 1024,
       "maxDuration": 30
     }
@@ -13,20 +13,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.cjs"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "destination": "/api/index.cjs"
     }
   ]
 }

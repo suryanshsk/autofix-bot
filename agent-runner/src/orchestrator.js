@@ -380,6 +380,8 @@ async function runAgent() {
     const testRunner = new TestRunner(WORKSPACE);
 
     // Step 4: Healing loop
+    let consecutiveNoFixes = 0;
+    
     for (let iteration = 1; iteration <= MAX_RETRIES; iteration++) {
       console.log(`\n🔄 CI Iteration ${iteration}/${MAX_RETRIES}`);
 
@@ -399,6 +401,10 @@ async function runAgent() {
       }
 
       console.log('❌ Tests failed, analyzing errors...');
+      console.log('\n📋 Test Output (last 500 chars):');
+      const output = (testResult.stdout + '\n' + testResult.stderr).slice(-500);
+      console.log(output);
+      console.log('');
       
       // Classify errors
       const errors = await llmService.classifyError(
@@ -406,12 +412,26 @@ async function runAgent() {
       );
 
       if (errors.length === 0) {
-        console.log('⚠️  Could not classify errors, retrying...');
+        console.log('⚠️  Could not classify errors from test output');
+        consecutiveNoFixes++;
+        
+        if (consecutiveNoFixes >= 2) {
+          console.log('\n🛑 Stopping: No fixable errors detected in last 2 iterations');
+          console.log('   The test failures may require manual investigation or configuration changes');
+          break;
+        }
+        
+        console.log('⏭️  Retrying with next iteration...');
         continue;
       }
+      
+      // Reset consecutive no-fix counter since we found errors
+      consecutiveNoFixes = 0;
 
       result.totalFailures += errors.length;
-      console.log(`📊 Found ${errors.length} error(s)`);
+      console.log(`📊 Found ${errors.length} error(s) to fix in this iteration`);
+      
+      let fixesAppliedThisIteration = 0;
 
       // Fix each error
       for (const error of errors) {
@@ -453,6 +473,7 @@ async function runAgent() {
         await repoGit.commit(commitMessage);
 
         result.totalCommits++;
+        fixesAppliedThisIteration++;
         result.fixes.push({
           file: error.file,
           bugType: error.bugType,
@@ -467,6 +488,8 @@ async function runAgent() {
 
         console.log(`✅ Fixed and committed`);
       }
+      
+      console.log(`\n✅ Applied ${fixesAppliedThisIteration} fix(es) in iteration ${iteration}`);
 
       // Push after each iteration
       console.log('⬆️  Pushing changes...');
@@ -508,7 +531,7 @@ async function runAgent() {
     if (result.totalCommits > 20) {
       result.score.commitPenalty = (result.totalCommits - 20) * 2;
     }
-    result.score.final = result.score.base + result.score.timeBonus - result.score.commitPenalty;
+    result.score.final = Math.min(100, result.score.base + result.score.timeBonus - result.score.commitPenalty);
     result.totalFixes = result.fixes.length;
 
     // Step 6: Create Pull Request

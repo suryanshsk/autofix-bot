@@ -360,6 +360,17 @@ async function runAgent() {
           originalContent
         );
 
+        // Extract code snippets (3 lines before and after the error line)
+        const getCodeSnippet = (content, lineNum, contextLines = 3) => {
+          const lines = content.split('\n');
+          const start = Math.max(0, lineNum - contextLines - 1);
+          const end = Math.min(lines.length, lineNum + contextLines);
+          return lines.slice(start, end).join('\n');
+        };
+
+        const beforeCode = getCodeSnippet(originalContent, error.line);
+        const afterCode = getCodeSnippet(fixedContent, error.line);
+
         // Write fix
         fs.writeFileSync(filePath, fixedContent);
 
@@ -375,6 +386,10 @@ async function runAgent() {
           line: error.line,
           commitMessage,
           status: 'FIXED',
+          errorMessage: error.description || `${error.bugType} error detected`,
+          beforeCode,
+          afterCode,
+          description: error.description,
         });
 
         console.log(`✅ Fixed and committed`);

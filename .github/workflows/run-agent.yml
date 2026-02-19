@@ -44,6 +44,11 @@ jobs:
           npm install --prefix ./agent-runner
           pip install pytest pytest-cov
       
+      - name: Configure Git Identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      
       - name: Run Healing Agent
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

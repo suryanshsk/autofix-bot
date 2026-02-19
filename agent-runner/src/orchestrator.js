@@ -285,6 +285,10 @@ async function runAgent() {
     console.log(`👥 Team: ${TEAM_NAME}`);
     console.log(`👤 Leader: ${LEADER_NAME}`);
     console.log(`🌿 Branch: ${result.branchName}`);
+    console.log('');
+    console.log('⚠️  NOTE: This agent can only push to repositories you have write access to.');
+    console.log('   If you don\'t own this repo, please fork it first!');
+    console.log('');
 
     // Step 1: Clone repository
     console.log('\n📥 Cloning repository...');
@@ -400,8 +404,28 @@ async function runAgent() {
       try {
         await repoGit.push('origin', result.branchName, ['--set-upstream']);
       } catch (pushError) {
-        console.log('⚠️  First push failed, force pushing...');
-        await repoGit.push('origin', result.branchName, ['--force', '--set-upstream']);
+        // Check if it's a permission error
+        if (pushError.message && pushError.message.includes('403')) {
+          console.error('❌ PERMISSION DENIED: Cannot push to this repository');
+          console.error('');
+          console.error('💡 SOLUTION:');
+          console.error('   1. Fork the repository to your account first');
+          console.error('   2. Or ensure you have write access to this repo');
+          console.error('   3. Or use a GitHub token with push permissions');
+          console.error('');
+          throw new Error(`Permission denied: You don't have write access to ${REPO_URL}. Please fork the repository or use a repo you own.`);
+        }
+        
+        // Try force push for other errors (e.g., diverged branches)
+        console.log('⚠️  First push failed, trying force push...');
+        try {
+          await repoGit.push('origin', result.branchName, ['--force', '--set-upstream']);
+        } catch (forcePushError) {
+          if (forcePushError.message && forcePushError.message.includes('403')) {
+            throw new Error(`Permission denied: You don't have write access to ${REPO_URL}. Please fork the repository or use a repo you own.`);
+          }
+          throw forcePushError;
+        }
       }
     }
 

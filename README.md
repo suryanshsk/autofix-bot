@@ -153,15 +153,39 @@ See [COMPLETE_SETUP.md](COMPLETE_SETUP.md) for detailed step-by-step instruction
 
 ## 📖 **Usage**
 
-1. **Open** http://localhost:8080
+### ⚠️ **IMPORTANT: Repository Permissions**
+
+The agent can **only push to repositories you have write access to**:
+
+✅ **Works on:**
+- Your own repositories
+- Repositories where you're a collaborator (with push access)
+- Forked repositories in your account
+
+❌ **Won't work on:**
+- Other people's repositories (unless you're a collaborator)
+- Public repos you don't own
+
+**💡 Solution**: If you want to test on someone else's repo:
+1. Click "Fork" on their GitHub repository
+2. Use your forked URL: `https://github.com/YOUR-USERNAME/repo-name`
+3. The agent will push to your fork successfully!
+
+---
+
+### 🚀 **Steps to Use**
+
+1. **Open** http://localhost:8080 (or your Vercel deployment URL)
 2. **Enter**:
-   - Repository URL (e.g., `https://github.com/username/repo`)
+   - Repository URL (e.g., `https://github.com/YOUR-USERNAME/your-repo`)
    - Team Name (e.g., `Team Alpha`)
    - Leader Name (e.g., `John Doe`)
 3. **Click** "Run Healing Agent"
 4. **Watch** real-time status updates
 5. **View** live logs on GitHub Actions
 6. **See** results in beautiful dashboard
+
+**Tip**: Always test with your own repositories or forks!
 
 ---
 

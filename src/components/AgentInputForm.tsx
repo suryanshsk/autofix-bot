@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { GitBranch, Loader2, Zap, Terminal } from "lucide-react";
+import { GitBranch, Loader2, Zap, Terminal, AlertCircle } from "lucide-react";
 import { formatBranchName } from "@/lib/types";
 
 interface Props {
@@ -43,10 +43,21 @@ const AgentInputForm = ({ onSubmit, loading }: Props) => {
             type="url"
             value={repoUrl}
             onChange={(e) => setRepoUrl(e.target.value)}
-            placeholder="https://github.com/user/repo"
+            placeholder="https://github.com/YOUR-USERNAME/your-repo"
             className="w-full px-4 py-2.5 rounded-md bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all"
             required
           />
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mt-2 flex items-start gap-2 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2"
+          >
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="font-medium">Important:</span> The agent can only push to repositories you have write access to. 
+              Use your own repos or forks!
+            </div>
+          </motion.div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

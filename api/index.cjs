@@ -27,10 +27,10 @@ const WORKFLOW_FILE = 'run-agent.yml';
 const runs = new Map();
 
 /**
- * POST /api/run-agent
+ * POST /run-agent
  * Triggers GitHub Actions workflow
  */
-app.post('/api/run-agent', async (req, res) => {
+app.post('/run-agent', async (req, res) => {
   try {
     const { repoUrl, teamName, leaderName } = req.body;
 
@@ -91,10 +91,10 @@ app.post('/api/run-agent', async (req, res) => {
 });
 
 /**
- * GET /api/status/:runId
+ * GET /status/:runId
  * Check workflow status and get results
  */
-app.get('/api/status/:runId', async (req, res) => {
+app.get('/status/:runId', async (req, res) => {
   try {
     const { runId } = req.params;
 
@@ -149,10 +149,10 @@ app.get('/api/status/:runId', async (req, res) => {
 });
 
 /**
- * GET /api/results/:runId
+ * GET /results/:runId
  * Download and parse results from workflow artifact
  */
-app.get('/api/results/:runId', async (req, res) => {
+app.get('/results/:runId', async (req, res) => {
   try {
     const { runId } = req.params;
 
@@ -199,10 +199,10 @@ app.get('/api/results/:runId', async (req, res) => {
 });
 
 /**
- * POST /api/webhook
+ * POST /webhook
  * Receives results from workflow
  */
-app.post('/api/webhook', async (req, res) => {
+app.post('/webhook', async (req, res) => {
   try {
     console.log('📥 Received webhook from workflow');
     const results = req.body;
@@ -215,12 +215,20 @@ app.post('/api/webhook', async (req, res) => {
 });
 
 /**
- * GET /api/health
+ * GET /health
  * Health check
  */
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'ci-healing-agent-github' });
 });
+
+// For local development
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`🚀 API running on http://localhost:${PORT}`);
+  });
+}
 
 // Export for Vercel serverless
 module.exports = app;

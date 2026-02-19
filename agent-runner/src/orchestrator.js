@@ -37,7 +37,7 @@ function formatBranchName(teamName, leaderName) {
 class LLMService {
   constructor(apiKey) {
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
   }
 
   async classifyError(errorOutput) {
@@ -137,13 +137,14 @@ ${fileContent}
 
 Provide ONLY the corrected code, no explanations:`;
 
-    const response = await this.client.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.2,
+    const result = await this.model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.2,
+      },
     });
 
-    return response.choices[0].message.content || fileContent;
+    return result.response.text() || fileContent;
   }
 }
 

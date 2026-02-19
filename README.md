@@ -216,7 +216,7 @@ TEAM_ALPHA_JOHN_DOE_AI_Fix
 - AdmZip (artifact extraction)
 
 ### AI & Automation
-- Google Gemini 1.5 Flash (error classification & fixes) - **FREE!**
+- Google Gemini 2.0 Flash (error classification & fixes) - **FREE!**
 - GitHub Actions (execution environment)
 - simple-git (Git operations)
 

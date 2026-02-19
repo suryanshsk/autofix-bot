@@ -58,7 +58,7 @@ GEMINI_API_KEY=AIzaSyDhQ8X_your_actual_key_here
 
 ## 📊 Free Tier Limits
 
-| Feature | Gemini 1.5 Flash (FREE) |
+| Feature | Gemini 2.0 Flash (FREE) |
 |---------|-------------------------|
 | **Rate Limit** | 15 requests/minute |
 | **Daily Quota** | 1,500 requests/day |
@@ -74,13 +74,15 @@ GEMINI_API_KEY=AIzaSyDhQ8X_your_actual_key_here
 
 ## ⚙️ Models Available
 
-We use **`gemini-1.5-flash`** because:
-- ✅ Fastest response time
+We use **`gemini-2.0-flash-exp`** because:
+- ✅ Latest and fastest model (Feb 2026)
 - ✅ FREE tier available
-- ✅ Great for structured tasks
+- ✅ Excellent for structured tasks
 - ✅ 1M context window
+- ✅ Improved reasoning capabilities
 
 **Other options:**
+- `gemini-1.5-flash` - Stable version
 - `gemini-1.5-pro` - More powerful (8K RPD free)
 - `gemini-1.0-pro` - Older version (60 RPM free)
 
